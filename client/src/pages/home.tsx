@@ -165,7 +165,6 @@ export default function Home() {
     // Update dimensions and cube type if provided
     if (cropWidth) setWidth(cropWidth);
     if (cropHeight) setHeight(cropHeight);
-    if (cropCubeType) setCubeType(cropCubeType as any);
     
     // Set processed image for algorithm selector
     setSourceImage(croppedImage);
@@ -701,42 +700,15 @@ export default function Home() {
                     <span className="bg-blue-600 text-white w-5 h-5 rounded-full inline-flex items-center justify-center mr-2 text-xs">3</span>
                     Choose Method
                   </h3>
-                  <Button 
-                    onClick={() => imageInputRef.current?.click()} 
+                  <Button
+                    onClick={() => imageInputRef.current?.click()}
                     className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 text-base font-medium shadow-lg"
                   >
                     <Wand2 className="w-5 h-5 mr-2" />
-                    Advanced Algorithms
+                    Generate from Image
                   </Button>
                   <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                    5 different algorithms for best quality
-                  </p>
-                  
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-                    </div>
-                    <div className="relative flex justify-center text-xs">
-                      <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">OR</span>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-500 dark:text-gray-400 dark:hover:bg-gray-700" 
-                    onClick={() => { 
-                      const newInput = document.createElement('input');
-                      newInput.type = 'file';
-                      newInput.accept = 'image/*';
-                      newInput.onchange = (e) => handleBasicImageGeneration(e as any);
-                      newInput.click();
-                    }}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Basic Generation
-                  </Button>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                    Quick, simple color matching
+                    Uses advanced algorithms for best quality.
                   </p>
                 </div>
 

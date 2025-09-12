@@ -47,12 +47,12 @@ export function exportToPdf(project: Project): void {
   const cubePadding = 2;
   const cubeDrawingSize = stickerSize * stickersPerSide + cubePadding * 2;
   
-  const totalGridWidth = mosaicWidth * cubeDrawingSize;
-  const scale = totalGridWidth > contentWidth ? contentWidth / totalGridWidth : 1;
+  const totalGridWidth = mosaicWidth * cubeDrawingSize;  
+  const scale = contentWidth / totalGridWidth;
 
   const scaledStickerSize = stickerSize * scale;
   const scaledCubeDrawingSize = cubeDrawingSize * scale;
-  const startX = margin;
+  const startX = (pageWidth - (mosaicWidth * scaledCubeDrawingSize)) / 2;
   let currentY = margin + 30;
 
   for (let i = 0; i < cubes.length; i++) {
@@ -109,7 +109,7 @@ export function exportToPdf(project: Project): void {
     doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(1);
     doc.rect(cubeX, adjustedCubeY, scaledCubeDrawingSize, scaledCubeDrawingSize, 'S');
-    
+
     // Draw coordinates
     doc.setFontSize(6 * scale);
     const coordText = `${String.fromCharCode(65 + colIndex)}${rowIndex + 1}`;
