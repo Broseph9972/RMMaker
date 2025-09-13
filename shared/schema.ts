@@ -24,7 +24,6 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projects.$inferSelect;
 
-// Type definitions for mosaic data structures
 export type CubeType = "2x2" | "3x3" | "4x4";
 
 export type StickerColor = string;
