@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { ColorPalette } from "@/components/color-palette";
 import { ToolPanel } from "@/components/tool-panel";
 import { LayersPanel } from "@/components/layers-panel";
 import { AlgorithmSelector } from "@/components/algorithm-selector";
+import { RomanMosaicPanel } from "@/components/roman-mosaic-panel";
 import { useMosaic } from "@/hooks/use-mosaic";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -37,15 +38,90 @@ import { ImageCropModal } from "@/components/image-crop-modal";
 import { COMPLETE_PALETTE, PALETTE_NAMES } from "@/lib/rubiks-colors";
 import { Logo } from "@/components/logo";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+  // Setup modal state
+  const [showSetup, setShowSetup] = useState(true);
+  const [setupCubeType, setSetupCubeType] = useState("3x3");
+  const [setupWidth, setSetupWidth] = useState(10);
+  const [setupHeight, setSetupHeight] = useState(10);
+
+  useEffect(() => {
+    // Only show setup if this is a new project (could be improved with localStorage)
+    if (mosaicData && mosaicData.width && mosaicData.height) {
+      setShowSetup(false);
+    }
+  }, []);
+  // Setup dialog handler
+  const handleSetupConfirm = () => {
+    setShowSetup(false);
+    setWidth(setupWidth);
+    setHeight(setupHeight);
+    updateDimensions(setupWidth, setupHeight);
+    if (setupCubeType !== cubeType) {
+      setCubeOutlineType("stickerless"); // or keep current
+      // If you have a setCubeType, use it here. Otherwise, createNewProject may need to accept cubeType.
+    }
+    // Optionally, reset project/canvas here
+  };
+  {/* Setup Dialog */}
+  <Dialog open={showSetup}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Start a New Mosaic</DialogTitle>
+        <DialogDescription>
+          Choose your cube type and grid size to begin.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="flex flex-col gap-4 py-2">
+        <div>
+          <label className="block text-sm font-medium mb-1">Cube Type</label>
+          <div className="flex gap-2">
+            {["2x2", "3x3", "4x4"].map(type => (
+              <Button
+                key={type}
+                variant={setupCubeType === type ? "default" : "outline"}
+                onClick={() => setSetupCubeType(type)}
+                className="flex-1"
+              >
+                {type}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-1">Width (cubes)</label>
+            <Input
+              type="number"
+              min={1}
+              max={50}
+              value={setupWidth}
+              onChange={e => setSetupWidth(Math.max(1, Math.min(50, Number(e.target.value))))}
+            />
+          </div>
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-1">Height (cubes)</label>
+            <Input
+              type="number"
+              min={1}
+              max={50}
+              value={setupHeight}
+              onChange={e => setSetupHeight(Math.max(1, Math.min(50, Number(e.target.value))))}
+            />
+          </div>
+        </div>
+      </div>
+      <DialogFooter>
+        <Button onClick={handleSetupConfirm} className="w-full">Start</Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 
 export default function Home() {
   const { toast } = useToast();
@@ -98,6 +174,7 @@ export default function Home() {
   const [width, setWidth] = useState(mosaicData.width);
   const [height, setHeight] = useState(mosaicData.height);
   const [showAlgorithmSelector, setShowAlgorithmSelector] = useState(false);
+  const [useRomanMosaicPanel, setUseRomanMosaicPanel] = useState(false);
   const [sourceImage, setSourceImage] = useState<HTMLImageElement | null>(null);
   const [useGrayscale, setUseGrayscale] = useState(false);
 
@@ -107,7 +184,6 @@ export default function Home() {
   const [grayscaleColor2, setGrayscaleColor2] = useState("#000000"); // Black
   const [showCropModal, setShowCropModal] = useState(false);
   const [cropImage, setCropImage] = useState<HTMLImageElement | null>(null);
-  const [wantsCropping, setWantsCropping] = useState(false);
   const [showBackgroundFillDialog, setShowBackgroundFillDialog] = useState(false);
 
   const handleNewProject = () => {
@@ -144,15 +220,9 @@ export default function Home() {
           }
         }
         
-        // Check if user wants cropping
-        if (wantsCropping) {
-          setCropImage(processedImage);
-          setShowCropModal(true);
-        } else {
-          // Set processed image for algorithm selector directly
-          setSourceImage(processedImage);
-          setShowAlgorithmSelector(true);
-        }
+  // Always crop
+  setCropImage(processedImage);
+  setShowCropModal(true);
       };
       img.src = URL.createObjectURL(file);
     }
@@ -238,6 +308,59 @@ export default function Home() {
 
   return (
     <div className="h-screen overflow-hidden bg-gray-100 dark:bg-gray-900 flex flex-col">
+      {/* Setup Dialog overlays everything on first visit */}
+      <Dialog open={showSetup} modal>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Start a New Mosaic</DialogTitle>
+            <DialogDescription>
+              Choose your cube type and grid size to begin.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <div>
+              <label className="block text-sm font-medium mb-1">Cube Type</label>
+              <div className="flex gap-2">
+                {["2x2", "3x3", "4x4"].map(type => (
+                  <Button
+                    key={type}
+                    variant={setupCubeType === type ? "default" : "outline"}
+                    onClick={() => setSetupCubeType(type)}
+                    className="flex-1"
+                  >
+                    {type}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium mb-1">Width (cubes)</label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={setupWidth}
+                  onChange={e => setSetupWidth(Math.max(1, Math.min(50, Number(e.target.value))))}
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium mb-1">Height (cubes)</label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={setupHeight}
+                  onChange={e => setSetupHeight(Math.max(1, Math.min(50, Number(e.target.value))))}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleSetupConfirm} className="w-full">Start</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Top Toolbar */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-4 z-50">
         <div className="flex items-center space-x-4">
@@ -298,9 +421,15 @@ export default function Home() {
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={() => setShowRightPanel(!showRightPanel)}
-            className={showRightPanel ? "bg-gray-200 dark:bg-gray-600" : ""}
-            title="Toggle Auto Generator"
+            onClick={() => {
+              setShowRightPanel(false);
+              setUseRomanMosaicPanel(true);
+              if (!sourceImage && imageInputRef.current) {
+                imageInputRef.current.click();
+              }
+            }}
+            className={useRomanMosaicPanel ? "bg-gray-200 dark:bg-gray-600" : ""}
+            title="Toggle Roman Mosaic UI"
           >
             <Wand2 className="w-4 h-4" />
           </Button>
@@ -497,63 +626,64 @@ export default function Home() {
                     )).size : 0
                   }
                 </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Dimensions:</span>
-                <span className="font-medium">{width} × {height}</span>
-              </div>
-            </div>
-          </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Main Canvas */}
-        <div className="flex-1 flex flex-col bg-gray-50">
-          <div className="flex-1 overflow-hidden relative">
-            <MosaicCanvas
-              mosaicData={mosaicData}
-              selectedTool={selectedTool}
-              selectedColor={selectedColor}
-              zoom={zoom}
-              showGrid={showGrid}
-              outlineColor={outlineColor}
-              backgroundColor={backgroundColor}
-              onCubeSelect={onCubeSelect}
-              onCubeUpdate={onCubeUpdate}
-            />
-          </div>
-          
-          {/* Status Bar */}
-          <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-2 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-            <div className="flex items-center space-x-4">
-              <span>Ready</span>
-              <span>{selectedTool} Tool Selected</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span>Selected Color: {selectedColor}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Panel - Auto Generator */}
-        <AnimatePresence>
-          {showRightPanel && (
-            <motion.div 
-              className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col"
-              initial={{ x: 320, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 320, opacity: 0 }}
-              transition={{ 
-                duration: 0.3, 
-                ease: [0.25, 0.25, 0.25, 1] 
-              }}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-                <div className="flex items-center">
-                  <Wand2 className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
-                  <h2 className="text-lg font-bold text-blue-800 dark:text-blue-300">Auto Generator</h2>
+                      return (
+                        <>
+                          <Dialog open={showSetup} modal>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Start a New Mosaic</DialogTitle>
+                                <DialogDescription>
+                                  Choose your cube type and grid size to begin.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="flex flex-col gap-4 py-2">
+                                <div>
+                                  <label className="block text-sm font-medium mb-1">Cube Type</label>
+                                  <div className="flex gap-2">
+                                    {["2x2", "3x3", "4x4"].map(type => (
+                                      <Button
+                                        key={type}
+                                        variant={setupCubeType === type ? "default" : "outline"}
+                                        onClick={() => setSetupCubeType(type)}
+                                        className="flex-1"
+                                      >
+                                        {type}
+                                      </Button>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div className="flex gap-4">
+                                  <div className="flex-1">
+                                    <label className="block text-sm font-medium mb-1">Width (cubes)</label>
+                                    <Input
+                                      type="number"
+                                      min={1}
+                                      max={50}
+                                      value={setupWidth}
+                                      onChange={e => setSetupWidth(Math.max(1, Math.min(50, Number(e.target.value))))}
+                                    />
+                                  </div>
+                                  <div className="flex-1">
+                                    <label className="block text-sm font-medium mb-1">Height (cubes)</label>
+                                    <Input
+                                      type="number"
+                                      min={1}
+                                      max={50}
+                                      value={setupHeight}
+                                      onChange={e => setSetupHeight(Math.max(1, Math.min(50, Number(e.target.value))))}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                              <DialogFooter>
+                                <Button onClick={handleSetupConfirm} className="w-full">Start</Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                          <div className="h-screen overflow-hidden bg-gray-100 dark:bg-gray-900 flex flex-col">
+                            {/* ...rest of the app... */}
+                          </div>
+                        </>
                 </div>
                 <Button
                   variant="ghost"
@@ -594,22 +724,7 @@ export default function Home() {
                   <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center">
                     <span className="bg-blue-600 text-white w-5 h-5 rounded-full inline-flex items-center justify-center mr-2 text-xs">2</span>
                     Options (Optional)
-                  </h3>
-                  <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg space-y-3">
-                    {/* Crop Option */}
-                    <div className="flex items-center justify-between">
-                      <label htmlFor="crop-option" className="text-sm text-gray-700 dark:text-gray-300 flex items-center">
-                        <Crop className="w-4 h-4 mr-2 text-gray-500" />
-                        Crop & Resize
-                      </label>
-                      <input
-                        type="checkbox"
-                        id="crop-option"
-                        checked={wantsCropping}
-                        onChange={(e) => setWantsCropping(e.target.checked)}
-                        className="rounded border-gray-300"
-                      />
-                    </div>
+                  </nh3>
                     
                     {/* 2 Colors Option */}
                     <div className="space-y-2">
@@ -736,6 +851,32 @@ export default function Home() {
                   </ul>
                 </div>
               </div>
+            </motion.div>
+          )}
+          {useRomanMosaicPanel && (
+            <motion.div 
+              className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col"
+              initial={{ x: 320, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 320, opacity: 0 }}
+              transition={{ 
+                duration: 0.3, 
+                ease: [0.25, 0.25, 0.25, 1] 
+              }}
+            >
+              <RomanMosaicPanel
+                sourceImage={sourceImage}
+                palette={["#FFFFFF", "#B90000", "#0045AD", "#FF5900", "#009B48", "#FFD500"]}
+                mosaicWidth={width}
+                mosaicHeight={height}
+                cubeType={cubeType}
+                onGenerate={(processedImageData, options) => {
+                  generateFromImageData(processedImageData, width, height, cubeType, options);
+                  setUseRomanMosaicPanel(false);
+                  setSourceImage(null);
+                }}
+                onRequestImageUpload={() => imageInputRef.current?.click()}
+              />
             </motion.div>
           )}
         </AnimatePresence>
