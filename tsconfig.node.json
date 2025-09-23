@@ -5,11 +5,12 @@
     "composite": true,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "noEmit": false,
+    "noEmit": true,
     "outDir": "dist"
   },
   "include": [
     "server/**/*.ts",
+    "shared/**/*.ts",
     "vite.config.ts",
     "tailwind.config.ts",
     "drizzle.config.ts",

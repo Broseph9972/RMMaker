@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { registerRoutes } from "./routes.ts";
+import { setupVite, serveStatic, log } from "./vite.ts";
 
 const app = express();
 app.use(express.json());
@@ -69,5 +69,3 @@ app.use((req, res, next) => {
     log(`serving on port ${port}`);
   });
 })();
-
-//simply a test to see if its actually pushing to github.

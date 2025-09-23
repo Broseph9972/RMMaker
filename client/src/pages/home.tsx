@@ -724,7 +724,7 @@ export default function Home() {
                   <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center">
                     <span className="bg-blue-600 text-white w-5 h-5 rounded-full inline-flex items-center justify-center mr-2 text-xs">2</span>
                     Options (Optional)
-                  </nh3>
+                  </h3>
                     
                     {/* 2 Colors Option */}
                     <div className="space-y-2">

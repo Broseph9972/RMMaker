@@ -1,4 +1,4 @@
-import { type Project, type InsertProject } from "@shared/schema";
+import { type Project, type InsertProject } from "../shared/schema.ts";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -28,7 +28,12 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const now = new Date();
     const project: Project = { 
-      ...insertProject, 
+      name: insertProject.name,
+      width: insertProject.width ?? 10,
+      height: insertProject.height ?? 10,
+      cubeType: insertProject.cubeType ?? "3x3",
+      mosaicData: insertProject.mosaicData,
+      colorPalette: insertProject.colorPalette ?? "standard",
       id, 
       createdAt: now,
       updatedAt: now 

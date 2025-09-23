@@ -30,5 +30,5 @@
       "@assets/*": ["./attached_assets/*"]
     }
   },
-  "references": [{ "path": "./tsconfig.node.json" }]
+  
 }

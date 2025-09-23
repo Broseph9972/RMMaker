@@ -1,7 +1,7 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { insertProjectSchema } from "@shared/schema";
+import { storage } from "./storage.ts";
+import { insertProjectSchema } from "../shared/schema.ts";
 import multer from "multer";
 import sharp from "sharp";
 
@@ -9,7 +9,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get all projects
-  app.get("/api/projects", async (req, res) => {
+  app.get("/api/projects", async (_req, res) => {
     try {
       const projects = await storage.getAllProjects();
       res.json(projects);
@@ -87,9 +87,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Import project from .rm file
-  app.post("/api/projects/import", upload.single('file'), async (req, res) => {
+  app.post("/api/projects/import", upload.single('file'), async (req: Request, res) => {
     try {
-      if (!req.file) {
+      if (!('file' in req) || !req.file) {
         return res.status(400).json({ message: "No file provided" });
       }
 
@@ -108,9 +108,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate mosaic from image
-  app.post("/api/generate-mosaic", upload.single('image'), async (req, res) => {
+  app.post("/api/generate-mosaic", upload.single('image'), async (req: Request, res) => {
     try {
-      if (!req.file) {
+      if (!('file' in req) || !req.file) {
         return res.status(400).json({ message: "No image provided" });
       }
 

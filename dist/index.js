@@ -21,7 +21,12 @@ var MemStorage = class {
     const id = randomUUID();
     const now = /* @__PURE__ */ new Date();
     const project = {
-      ...insertProject,
+      name: insertProject.name,
+      width: insertProject.width ?? 10,
+      height: insertProject.height ?? 10,
+      cubeType: insertProject.cubeType ?? "3x3",
+      mosaicData: insertProject.mosaicData,
+      colorPalette: insertProject.colorPalette ?? "standard",
       id,
       createdAt: now,
       updatedAt: now
@@ -72,7 +77,7 @@ import multer from "multer";
 import sharp from "sharp";
 var upload = multer({ storage: multer.memoryStorage() });
 async function registerRoutes(app2) {
-  app2.get("/api/projects", async (req, res) => {
+  app2.get("/api/projects", async (_req, res) => {
     try {
       const projects2 = await storage.getAllProjects();
       res.json(projects2);
@@ -139,7 +144,7 @@ async function registerRoutes(app2) {
   });
   app2.post("/api/projects/import", upload.single("file"), async (req, res) => {
     try {
-      if (!req.file) {
+      if (!("file" in req) || !req.file) {
         return res.status(400).json({ message: "No file provided" });
       }
       const fileContent = req.file.buffer.toString("utf-8");
@@ -154,7 +159,7 @@ async function registerRoutes(app2) {
   });
   app2.post("/api/generate-mosaic", upload.single("image"), async (req, res) => {
     try {
-      if (!req.file) {
+      if (!("file" in req) || !req.file) {
         return res.status(400).json({ message: "No image provided" });
       }
       const { width = 10, height = 10, cubeType = "3x3" } = req.body;
