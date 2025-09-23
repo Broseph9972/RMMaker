@@ -45,88 +45,24 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-  // Setup modal state
-  const [showSetup, setShowSetup] = useState(true);
-  const [setupCubeType, setSetupCubeType] = useState("3x3");
-  const [setupWidth, setSetupWidth] = useState(10);
-  const [setupHeight, setSetupHeight] = useState(10);
-
-  useEffect(() => {
-    // Only show setup if this is a new project (could be improved with localStorage)
-    if (mosaicData && mosaicData.width && mosaicData.height) {
-      setShowSetup(false);
-    }
-  }, []);
-  // Setup dialog handler
-  const handleSetupConfirm = () => {
-    setShowSetup(false);
-    setWidth(setupWidth);
-    setHeight(setupHeight);
-    updateDimensions(setupWidth, setupHeight);
-    if (setupCubeType !== cubeType) {
-      setCubeOutlineType("stickerless"); // or keep current
-      // If you have a setCubeType, use it here. Otherwise, createNewProject may need to accept cubeType.
-    }
-    // Optionally, reset project/canvas here
-  };
-  {/* Setup Dialog */}
-  <Dialog open={showSetup}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Start a New Mosaic</DialogTitle>
-        <DialogDescription>
-          Choose your cube type and grid size to begin.
-        </DialogDescription>
-      </DialogHeader>
-      <div className="flex flex-col gap-4 py-2">
-        <div>
-          <label className="block text-sm font-medium mb-1">Cube Type</label>
-          <div className="flex gap-2">
-            {["2x2", "3x3", "4x4"].map(type => (
-              <Button
-                key={type}
-                variant={setupCubeType === type ? "default" : "outline"}
-                onClick={() => setSetupCubeType(type)}
-                className="flex-1"
-              >
-                {type}
-              </Button>
-            ))}
-          </div>
-        </div>
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium mb-1">Width (cubes)</label>
-            <Input
-              type="number"
-              min={1}
-              max={50}
-              value={setupWidth}
-              onChange={e => setSetupWidth(Math.max(1, Math.min(50, Number(e.target.value))))}
-            />
-          </div>
-          <div className="flex-1">
-            <label className="block text-sm font-medium mb-1">Height (cubes)</label>
-            <Input
-              type="number"
-              min={1}
-              max={50}
-              value={setupHeight}
-              onChange={e => setSetupHeight(Math.max(1, Math.min(50, Number(e.target.value))))}
-            />
-          </div>
-        </div>
-      </div>
-      <DialogFooter>
-        <Button onClick={handleSetupConfirm} className="w-full">Start</Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 export default function Home() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const [showSetup, setShowSetup] = useState(true);
+  const [setupCubeType, setSetupCubeType] = useState("3x3");
+  const [setupWidth, setSetupWidth] = useState(10);
+  const [setupHeight, setSetupHeight] = useState(10);
   
   const {
     mosaicData,
@@ -170,6 +106,12 @@ export default function Home() {
     toggleGrid,
     toggleOutlineColor
   } = useMosaic();
+
+  useEffect(() => {
+    if (mosaicData && mosaicData.width && mosaicData.height) {
+      setShowSetup(false);
+    }
+  }, [mosaicData]);
 
   const [width, setWidth] = useState(mosaicData.width);
   const [height, setHeight] = useState(mosaicData.height);
@@ -296,6 +238,16 @@ export default function Home() {
 
   const handleExport = () => {
     exportProject();
+  };
+
+  const handleSetupConfirm = () => {
+    setShowSetup(false);
+    setWidth(setupWidth);
+    setHeight(setupHeight);
+    updateDimensions(setupWidth, setupHeight);
+    if (setupCubeType !== cubeType) {
+      setCubeOutlineType("stickerless");
+    }
   };
 
   const handleApplyDimensions = () => {
